@@ -1,0 +1,22 @@
+{
+  "name": "Color Flood",
+  "short_name": "Color Flood",
+  "description": "Can you flood the entire board with one color before your moves run out?",
+  "start_url": "/index.html",
+  "display": "fullscreen",
+  "background_color": "#0f0f1a",
+  "theme_color": "#0f0f1a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/3A86FF/ffffff?text=CF",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/3A86FF/ffffff?text=CF",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
