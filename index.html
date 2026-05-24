@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="Can you flood the entire board with one color before your moves run out? Tap a color, spread your territory, and think fast! With 3 difficulty levels, random boards every time, and quick 2-minute sessions — Color Flood is the perfect brain teaser for all ages. Free to play!">
+<meta name="theme-color" content="#0f0f1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Color Flood">
+<title>Color Flood — Puzzle Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --c0: #E84855;
+    --c1: #F4A261;
+    --c2: #2EC4B6;
+    --c3: #3A86FF;
+    --c4: #8338EC;
+    --c5: #06D6A0;
+    --bg: #0f0f1a;
+    --surface: #1a1a2e;
+    --surface2: #16213e;
+    --border: rgba(255,255,255,0.07);
+    --txt: #f0f0ff;
+    --txt2: #8888aa;
+    --txt3: #555577;
+    --radius: 12px;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--txt);
+    font-family: var(--font-body);
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 0;
+  }
+
+  /* Background subtle grid pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(58,134,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(58,134,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #app {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 16px 20px;
+    gap: 12px;
+  }
+
+  /* Header */
+  .header {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding-top: 8px;
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(26px, 7vw, 32px);
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #3A86FF 0%, #8338EC 50%, #E84855 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .tagline {
+    font-size: 11px;
+    color: var(--txt3);
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    font-weight: 500;
+  }
+
+  /* Difficulty selector */
+  .diff-row {
+    display: flex;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 4px;
+  }
+
+  .diff-btn {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 7px 16px;
+    border-radius: 50px;
+    border: none;
+    background: transparent;
+    color: var(--txt2);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+
+  .diff-btn.active {
+    background: linear-gradient(135deg, #3A86FF, #8338EC);
+    color: #fff;
+    box-shadow: 0 2px 12px rgba(58,134,255,0.35);
+  }
+
+  .diff-btn:active { transform: scale(0.95); }
+
+  /* Stats */
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 8px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent, #3A86FF), transparent);
+    opacity: 0.6;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    color: var(--txt3);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(20px, 5vw, 24px);
+    line-height: 1;
+    transition: color 0.3s;
+  }
+
+  .stat-value.warn { color: #F4A261; }
+  .stat-value.danger { color: #E84855; }
+  .stat-value.good { color: #06D6A0; }
+
+  /* Progress bar */
+  .progress-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--txt3);
+    letter-spacing: 0.5px;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 5px;
+    background: var(--surface);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #3A86FF, #8338EC, #06D6A0);
+    background-size: 200% 100%;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: shimmer 2s infinite linear;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Game board */
+  .board-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    flex: 1;
+  }
+
+  #board {
+    display: grid;
+    gap: 2px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+
+  .cell {
+    border-radius: 2px;
+    transition: filter 0.1s ease, transform 0.08s ease;
+  }
+
+  .cell.just-flooded {
+    animation: cellFlood 0.25s ease-out;
+  }
+
+  @keyframes cellFlood {
+    0% { filter: brightness(2.5) saturate(0.5); transform: scale(1.15); }
+    100% { filter: brightness(1) saturate(1); transform: scale(1); }
+  }
+
+  /* Color buttons */
+  .color-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    padding: 4px 0;
+  }
+
+  .cbtn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease, border-color 0.15s ease;
+    outline: none;
+    position: relative;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+  }
+
+  .cbtn::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s ease;
+  }
+
+  .cbtn.current {
+    border-color: #fff;
+    transform: scale(1.2);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 0 3px rgba(255,255,255,0.2);
+  }
+
+  .cbtn:hover:not(:disabled) { transform: scale(1.15); }
+  .cbtn.current:hover { transform: scale(1.2); }
+  .cbtn:active:not(:disabled) { transform: scale(0.95); }
+  .cbtn:disabled { opacity: 0.25; cursor: not-allowed; transform: none !important; }
+
+  /* Message bar */
+  .msg-bar {
+    min-height: 28px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    text-align: center;
+    color: var(--txt2);
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+  }
+
+  .msg-bar.win {
+    color: #06D6A0;
+    font-size: 16px;
+    text-shadow: 0 0 20px rgba(6,214,160,0.4);
+    animation: winPulse 1s ease infinite alternate;
+  }
+
+  .msg-bar.lose {
+    color: #E84855;
+    font-size: 16px;
+  }
+
+  @keyframes winPulse {
+    from { opacity: 0.85; }
+    to { opacity: 1; }
+  }
+
+  /* Action buttons */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .action-btn {
+    flex: 1;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    padding: 13px 16px;
+    border-radius: 50px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    outline: none;
+  }
+
+  .action-btn.primary {
+    background: linear-gradient(135deg, #3A86FF, #8338EC);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 16px rgba(58,134,255,0.3);
+  }
+
+  .action-btn.secondary {
+    background: var(--surface);
+    color: var(--txt2);
+  }
+
+  .action-btn:hover { transform: translateY(-1px); }
+  .action-btn:active { transform: scale(0.97); }
+  .action-btn.primary:hover { box-shadow: 0 6px 20px rgba(58,134,255,0.45); }
+
+  /* Best score */
+  .best-score {
+    font-size: 11px;
+    color: var(--txt3);
+    text-align: center;
+    min-height: 16px;
+  }
+
+  .best-score strong { color: var(--txt2); font-weight: 500; }
+
+  /* Win overlay */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,15,26,0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(8px);
+  }
+
+  .overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .overlay-card {
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 36px 32px;
+    text-align: center;
+    max-width: 300px;
+    width: 90%;
+    transform: scale(0.8) translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  }
+
+  .overlay.show .overlay-card { transform: scale(1) translateY(0); }
+
+  .overlay-emoji {
+    font-size: 52px;
+    line-height: 1;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .overlay-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 26px;
+    margin-bottom: 8px;
+  }
+
+  .overlay-title.win-title {
+    background: linear-gradient(135deg, #06D6A0, #3A86FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .overlay-title.lose-title { color: #E84855; }
+
+  .overlay-sub {
+    font-size: 14px;
+    color: var(--txt2);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .overlay-btn {
+    width: 100%;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    padding: 14px;
+    border-radius: 50px;
+    border: none;
+    background: linear-gradient(135deg, #3A86FF, #8338EC);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(58,134,255,0.35);
+    transition: all 0.15s ease;
+  }
+
+  .overlay-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(58,134,255,0.5); }
+  .overlay-btn:active { transform: scale(0.97); }
+
+  .overlay-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .overlay-stat {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 10px 8px;
+  }
+
+  .overlay-stat-label {
+    font-size: 10px;
+    color: var(--txt3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .overlay-stat-val {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--txt);
+  }
+
+  /* Responsive tweaks */
+  @media (max-height: 700px) {
+    #app { gap: 8px; padding: 10px 14px 14px; }
+    .cbtn { width: 38px; height: 38px; }
+    .logo { font-size: 24px; }
+  }
+
+  @media (max-height: 600px) {
+    .header { padding-top: 2px; }
+    .tagline { display: none; }
+    .best-score { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header class="header">
+    <div class="logo">Color Flood</div>
+    <div class="tagline">Flood the board · Beat the clock</div>
+  </header>
+
+  <div class="diff-row">
+    <button class="diff-btn active" onclick="setDiff(this,'easy')">EASY</button>
+    <button class="diff-btn" onclick="setDiff(this,'medium')">MEDIUM</button>
+    <button class="diff-btn" onclick="setDiff(this,'hard')">HARD</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat" style="--accent:#3A86FF">
+      <div class="stat-label">Moves</div>
+      <div class="stat-value" id="stat-moves">0</div>
+    </div>
+    <div class="stat" style="--accent:#8338EC">
+      <div class="stat-label">Limit</div>
+      <div class="stat-value" id="stat-max">25</div>
+    </div>
+    <div class="stat" style="--accent:#06D6A0">
+      <div class="stat-label">Covered</div>
+      <div class="stat-value" id="stat-pct">0%</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-labels">
+      <span>Progress</span>
+      <span id="prog-label">0 / 144 cells</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="prog-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="board-wrap">
+    <div id="board"></div>
+  </div>
+
+  <div class="color-btns" id="color-btns"></div>
+
+  <div class="msg-bar" id="msg-bar">Tap a color to start flooding!</div>
+
+  <div class="btn-row">
+    <button class="action-btn secondary" onclick="undoMove()">↩ Undo</button>
+    <button class="action-btn primary" onclick="newGame()">New Game</button>
+  </div>
+
+  <div class="best-score" id="best-score"></div>
+</div>
+
+<!-- Win/Lose overlay -->
+<div class="overlay" id="overlay">
+  <div class="overlay-card">
+    <span class="overlay-emoji" id="ov-emoji">🎉</span>
+    <div class="overlay-title" id="ov-title">You Win!</div>
+    <div class="overlay-stats">
+      <div class="overlay-stat">
+        <div class="overlay-stat-label">Moves used</div>
+        <div class="overlay-stat-val" id="ov-moves">-</div>
+      </div>
+      <div class="overlay-stat">
+        <div class="overlay-stat-label">Best score</div>
+        <div class="overlay-stat-val" id="ov-best">-</div>
+      </div>
+    </div>
+    <div class="overlay-sub" id="ov-sub">Amazing! You flooded the board!</div>
+    <button class="overlay-btn" onclick="closeOverlay()">Play Again</button>
+  </div>
+</div>
+
+<script>
+const COLORS = ['#E84855','#F4A261','#2EC4B6','#3A86FF','#8338EC','#06D6A0'];
+const DIFF = {
+  easy:   { size: 12, moves: 28 },
+  medium: { size: 16, moves: 30 },
+  hard:   { size: 20, moves: 32 }
+};
+
+let N = 12, maxMoves = 28, moves = 0;
+let board = [], history = [], gameOver = false;
+let currentDiff = 'easy';
+let bestScores = { easy: null, medium: null, hard: null };
+let cellEls = [];
+
+function setDiff(el, d) {
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentDiff = d;
+  N = DIFF[d].size;
+  maxMoves = DIFF[d].moves;
+  newGame();
+}
+
+function randColor() { return Math.floor(Math.random() * COLORS.length); }
+
+function makeBoard() {
+  board = Array.from({ length: N * N }, () => randColor());
+  // ensure board isn't already solved
+  const c = board[0];
+  if (board.every(x => x === c)) board[1] = (c + 1) % COLORS.length;
+}
+
+function getFloodRegion() {
+  const visited = new Uint8Array(N * N);
+  const stack = [0];
+  const color = board[0];
+  const result = [];
+  while (stack.length) {
+    const i = stack.pop();
+    if (visited[i]) continue;
+    if (board[i] !== color) continue;
+    visited[i] = 1;
+    result.push(i);
+    const r = Math.floor(i / N), c = i % N;
+    if (r > 0)   stack.push(i - N);
+    if (r < N-1) stack.push(i + N);
+    if (c > 0)   stack.push(i - 1);
+    if (c < N-1) stack.push(i + 1);
+  }
+  return result;
+}
+
+function flood(newColor) {
+  if (gameOver) return;
+  if (newColor === board[0]) return;
+  history.push(board.slice());
+  const region = getFloodRegion();
+  const newCells = [];
+  region.forEach(i => { board[i] = newColor; });
+
+  // also expand into newly matching neighbors
+  const expanded = expandFlood(region, newColor);
+  moves++;
+  renderCells(expanded);
+  updateStats();
+  updateColorBtns();
+  checkEnd();
+}
+
+function expandFlood(initial, color) {
+  // BFS from initial flood cells outward to find newly connected cells
+  const visited = new Uint8Array(N * N);
+  initial.forEach(i => visited[i] = 1);
+  const queue = [...initial];
+  const allChanged = [...initial];
+  while (queue.length) {
+    const i = queue.shift();
+    const r = Math.floor(i / N), c = i % N;
+    const neighbors = [];
+    if (r > 0)   neighbors.push(i - N);
+    if (r < N-1) neighbors.push(i + N);
+    if (c > 0)   neighbors.push(i - 1);
+    if (c < N-1) neighbors.push(i + 1);
+    neighbors.forEach(j => {
+      if (!visited[j] && board[j] === color) {
+        visited[j] = 1;
+        board[j] = color;
+        queue.push(j);
+        allChanged.push(j);
+      }
+    });
+  }
+  return allChanged;
+}
+
+function undoMove() {
+  if (history.length === 0 || gameOver) return;
+  board = history.pop();
+  moves = Math.max(0, moves - 1);
+  gameOver = false;
+  renderAllCells();
+  updateStats();
+  updateColorBtns();
+  setMsg('Undone! Keep going.', '');
+}
+
+function checkEnd() {
+  const c = board[0];
+  const won = board.every(x => x === c);
+  if (won) {
+    gameOver = true;
+    if (!bestScores[currentDiff] || moves < bestScores[currentDiff]) {
+      bestScores[currentDiff] = moves;
+      try { localStorage.setItem('cf_best_' + currentDiff, moves); } catch(e){}
+    }
+    updateBest();
+    setTimeout(() => showOverlay(true), 300);
+    return;
+  }
+  if (moves >= maxMoves) {
+    gameOver = true;
+    setTimeout(() => showOverlay(false), 300);
+  }
+}
+
+function showOverlay(won) {
+  const pct = Math.round(getFloodRegion().length / board.length * 100);
+  document.getElementById('ov-emoji').textContent = won ? '🎉' : '💥';
+  const title = document.getElementById('ov-title');
+  title.textContent = won ? 'Board Flooded!' : 'Out of Moves!';
+  title.className = 'overlay-title ' + (won ? 'win-title' : 'lose-title');
+  document.getElementById('ov-moves').textContent = moves;
+  document.getElementById('ov-best').textContent = bestScores[currentDiff] || '-';
+  document.getElementById('ov-sub').textContent = won
+    ? `You solved it in ${moves} moves on ${currentDiff} mode!`
+    : `You covered ${pct}% of the board. So close — try again!`;
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeOverlay() {
+  document.getElementById('overlay').classList.remove('show');
+  newGame();
+}
+
+function setMsg(text, cls) {
+  const el = document.getElementById('msg-bar');
+  el.textContent = text;
+  el.className = 'msg-bar ' + cls;
+}
+
+function updateStats() {
+  const region = getFloodRegion();
+  const pct = Math.round(region.length / board.length * 100);
+  const remaining = maxMoves - moves;
+
+  const mvEl = document.getElementById('stat-moves');
+  mvEl.textContent = moves;
+  mvEl.className = 'stat-value' +
+    (remaining <= 5 && remaining > 2 ? ' warn' : '') +
+    (remaining <= 2 ? ' danger' : '') +
+    (pct === 100 ? ' good' : '');
+
+  document.getElementById('stat-max').textContent = maxMoves - moves;
+  const pctEl = document.getElementById('stat-pct');
+  pctEl.textContent = pct + '%';
+  pctEl.className = 'stat-value' + (pct >= 80 ? ' good' : pct >= 60 ? '' : '');
+
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = `${region.length} / ${N * N} cells`;
+
+  if (!gameOver && moves > 0) {
+    if (remaining <= 3) setMsg(`Only ${remaining} move${remaining === 1 ? '' : 's'} left!`, '');
+    else if (pct >= 90) setMsg('Almost there — keep going!', '');
+    else if (pct >= 70) setMsg('Great progress!', '');
+  }
+}
+
+function updateColorBtns() {
+  const cur = board[0];
+  document.querySelectorAll('.cbtn').forEach((btn, i) => {
+    btn.className = 'cbtn' + (i === cur ? ' current' : '');
+    btn.disabled = gameOver;
+  });
+}
+
+function updateBest() {
+  const b = bestScores[currentDiff];
+  const el = document.getElementById('best-score');
+  el.innerHTML = b
+    ? `Personal best on <strong>${currentDiff}</strong>: <strong>${b} moves</strong>`
+    : '';
+}
+
+function buildBoardDOM() {
+  const boardEl = document.getElementById('board');
+  const vw = Math.min(window.innerWidth, 420) - 32;
+  const vh = window.innerHeight * 0.42;
+  const cellSize = Math.floor(Math.min(vw, vh) / N);
+  const sz = Math.max(cellSize, 14);
+
+  boardEl.style.gridTemplateColumns = `repeat(${N}, ${sz}px)`;
+  boardEl.innerHTML = '';
+  cellEls = [];
+
+  for (let i = 0; i < N * N; i++) {
+    const d = document.createElement('div');
+    d.className = 'cell';
+    d.style.width = sz + 'px';
+    d.style.height = sz + 'px';
+    boardEl.appendChild(d);
+    cellEls.push(d);
+  }
+}
+
+function renderAllCells() {
+  for (let i = 0; i < board.length; i++) {
+    cellEls[i].style.background = COLORS[board[i]];
+    cellEls[i].classList.remove('just-flooded');
+  }
+}
+
+function renderCells(changed) {
+  const changedSet = new Set(changed);
+  for (let i = 0; i < board.length; i++) {
+    cellEls[i].style.background = COLORS[board[i]];
+    if (changedSet.has(i)) {
+      cellEls[i].classList.remove('just-flooded');
+      void cellEls[i].offsetWidth;
+      cellEls[i].classList.add('just-flooded');
+    }
+  }
+}
+
+function buildColorBtns() {
+  const wrap = document.getElementById('color-btns');
+  wrap.innerHTML = '';
+  COLORS.forEach((col, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'cbtn';
+    btn.style.background = col;
+    btn.setAttribute('aria-label', 'Flood with color ' + (i + 1));
+    btn.onclick = () => flood(i);
+    wrap.appendChild(btn);
+  });
+}
+
+function newGame() {
+  moves = 0;
+  history = [];
+  gameOver = false;
+  N = DIFF[currentDiff].size;
+  maxMoves = DIFF[currentDiff].moves;
+  makeBoard();
+  buildBoardDOM();
+  renderAllCells();
+  buildColorBtns();
+  updateColorBtns();
+  updateStats();
+  updateBest();
+  setMsg('Tap a color to start flooding!', '');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// Load best scores from storage
+function loadBests() {
+  ['easy','medium','hard'].forEach(d => {
+    try {
+      const v = localStorage.getItem('cf_best_' + d);
+      if (v) bestScores[d] = parseInt(v);
+    } catch(e){}
+  });
+}
+
+// Handle resize
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    buildBoardDOM();
+    renderAllCells();
+  }, 150);
+});
+
+// Init
+loadBests();
+newGame();
+</script>
+</body>
+</html>
