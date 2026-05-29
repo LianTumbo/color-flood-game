@@ -1,13 +1,31 @@
 {
-  "background_color": "#0f0f1a",
-  "description": "Can you flood the entire board with one color before your moves run out?",
-  "dir": "ltr",
-  "display": "fullscreen",
+  "id": "com.colorflood.puzzlegame",
   "name": "Color Flood",
-  "orientation": "any",
-  "scope": "/",
   "short_name": "Color Flood",
-  "start_url": "/index.html",
+  "description": "Can you flood the entire board with one color before your moves run out? Free brain teaser puzzle game for all ages.",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0f0f1a",
   "theme_color": "#0f0f1a",
-  "id": "com.colorflood.puzzlegame"
+  "lang": "en",
+  "categories": ["games", "puzzle", "entertainment"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false
 }
